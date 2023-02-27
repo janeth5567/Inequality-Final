@@ -13,13 +13,13 @@ education:
     institution: Massachusetts Institute of Technology
     year: 2008
 email: ""
-first_name: Alice
+first_name: Janet
 highlight_name: true
 interests:
 - Artificial Intelligence
 - Computational Linguistics
 - Information Retrieval
-last_name: Wu
+last_name: Hernandez
 organizations:
 - name: Stanford University
   url: https://www.stanford.edu/

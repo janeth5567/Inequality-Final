@@ -1,0 +1,107 @@
+---
+title: Is The American Dream Still Alive?
+author: Janet Hernandez
+date: '2023-02-27'
+slug: is-the-american-dream-still-alive
+categories: []
+tags: []
+subtitle: ''
+summary: ''
+authors: []
+lastmod: '2023-02-27T12:57:26-05:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r setup, include=FALSE, warning=FALSE, echo=FALSE}
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(readr)
+library(scales)
+library(plotly)
+library(rjson)
+library(jtools)
+library(htmlwidgets)
+library(reactable)
+library(sqldf)
+library(blogdown)
+library(sf)
+library(tigris)
+library(tidycensus)
+library(leaflet)
+
+```
+
+
+```{r leaflet, include=FALSE}
+# Get geometry for Miami-Dade County
+md_county <- get_acs(
+  geography = "county", 
+  state = "FL", 
+  county = "Miami-Dade County", 
+  variables = "B01001_001",
+  geometry = TRUE
+) %>% 
+  st_geometry()
+```
+
+```{r, include=FALSE}
+# Get geometry and median income data for Miami-Dade County tracts
+suppressMessages({
+  md_county_tracts <- get_acs(
+    geography = "tract",
+    state = "FL",
+    county = "Miami-Dade County",
+    variables = c("B19013_001", "B01001_001", "NAME"),
+    geometry = TRUE,
+  ) %>%
+    st_transform(st_crs(md_county)) %>%
+    rename(median_income = estimate) %>%
+    select(-moe)
+})
+
+# Define the color palette
+pal <- colorBin("YlOrRd", domain = md_county_tracts$median_income, bins = 15)
+```
+
+# Actual Plot 
+
+```{r}
+# Create the leaflet map
+leaflet(md_county_tracts) %>%
+  setView(lng = -80.3, lat = 25.8, zoom = 10) %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addPolygons(data = md_county_tracts, 
+              fillColor = ~pal(median_income),
+              fillOpacity = 0.5,
+              color = "#BDBDC3",
+              weight = 1,
+              label = ~NAME,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto"
+              ),
+              popup = paste("<strong>Median Income:</strong>", md_county_tracts$median_income, "<br>",
+                            "<strong>Census Tract Name:</strong>", md_county_tracts$NAME),
+              popupOptions = popupOptions(
+                closeButton = TRUE,
+                closeOnClick = FALSE,
+                autoPan = FALSE,
+                className = "popup-custom"
+              )
+  ) %>%
+  addLegend(pal = pal, values = ~median_income, 
+            title = "Median Income", position = "bottomright")
+```
+
+
